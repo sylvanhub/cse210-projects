@@ -1,27 +1,23 @@
 using System;
+using System.Collections.Generic;
 
-public class Program
+public class Student
 {
-    static void Main()
+    public string Name { get; set; }
+    public string Department { get; set; }
+    public string MatriculationNumber { get; set; }
+}
+
+public class VotingSystemBase
+{
+    protected Dictionary<string, string> Votes { get; set; }
+    protected string[] Positions { get; set; }
+
+    public VotingSystemBase()
     {
-        // Welcome message and ask for name
-        Console.WriteLine("Welcome to the Student Union Election Voting System!"); 
-        Console.Write(" Please enter your name: ");
-        string name = Console.ReadLine();
-
-        // Personalized welcoming message
-        Console.WriteLine($"Hello, {name}! Welcome to the voting system.");
-
-        // Ask for department and matriculation number
-        Console.Write("Enter your department: ");
-        string department = Console.ReadLine();
-
-        Console.Write("Enter your matriculation number: ");
-        string matriculationNumber = Console.ReadLine();
-
-        // Provide list of seats to be voted for
-        Console.WriteLine("Please enter your votes for the following positions:");
-        string[] positions = {
+        Votes = new Dictionary<string, string>();
+        Positions = new string[]
+        {
             "SUG President",
             "Vice President",
             "General Secretary",
@@ -37,23 +33,22 @@ public class Program
             "Auditor 1",
             "Auditor 2"
         };
+    }
 
-        // Ask for votes and store them in a dictionary
-        var votes = new Dictionary<string, string>();
-        foreach (var position in positions)
+    protected void RecordVotes()
+    {
+        foreach (var position in Positions)
         {
             Console.Write($"Enter your vote for {position}: ");
             string candidate = Console.ReadLine();
-            votes[position] = candidate;
+            Votes[position] = candidate;
         }
+    }
 
-        // Ask for SUG payment receipt code
-        Console.Write("Enter the code from your SUG payment receipt: ");
-        string receiptCode = Console.ReadLine();
-
-        // Print voting choices for review and allow edits
+    protected void ReviewAndEditVotes()
+    {
         Console.WriteLine("\nReview Your Votes:");
-        foreach (var kvp in votes)
+        foreach (var kvp in Votes)
         {
             Console.WriteLine($"{kvp.Key}: {kvp.Value}");
         }
@@ -63,20 +58,87 @@ public class Program
 
         if (editChoice.ToLower() == "yes")
         {
-            // Allow edits
-            foreach (var position in positions)
+            foreach (var position in Positions)
             {
                 Console.Write($"Enter your revised vote for {position}: ");
                 string revisedCandidate = Console.ReadLine();
-                votes[position] = revisedCandidate;
+                Votes[position] = revisedCandidate;
             }
         }
+    }
 
-        // Voting submission confirmation
+    protected void PrintConfirmationMessage()
+    {
         Console.WriteLine("\nYour voting has been recorded successfully.");
         Console.WriteLine("Thank you for exercising your student right.");
         Console.WriteLine("Your vote is your power and your voice, and it counts.");
+    }
+
+    protected virtual bool ValidateReceiptCode(string code)
+    {
+        if (int.TryParse(code, out int receiptCode))
+        {
+            if (receiptCode >= 1 && receiptCode <= 20)
+            {
+                return true;
+            }
+        }
+
+        Console.WriteLine("Invalid code. Please enter a code(refrence written on the left of the receipt).");
+        return false;
+    }
+
+    protected string EnterReceiptCode()
+    {
+        string receiptCode;
+        do
+        {
+            Console.Write("Enter the code from your SUG payment receipt: ");
+            receiptCode = Console.ReadLine();
+        } while (!ValidateReceiptCode(receiptCode));
+
+        return receiptCode;
+    }
+}
+
+public class VotingSystem : VotingSystemBase
+{
+    public Student StudentInfo { get; set; }
+
+    public void RunVotingSystem()
+    {
+        Console.WriteLine("Welcome to the Student Union Election Voting System!");
+
+        StudentInfo = new Student();
+        Console.Write(" Please enter your name: ");
+        StudentInfo.Name = Console.ReadLine();
+
+        Console.Write("Enter your department: ");
+        StudentInfo.Department = Console.ReadLine();
+
+        Console.Write("Enter your matriculation number: ");
+        StudentInfo.MatriculationNumber = Console.ReadLine();
+
+        RecordVotes();
+        ReviewAndEditVotes();
+
+        string receiptCode = EnterReceiptCode(); // Ask for the receipt code
+
+        if (receiptCode != null) // Check if receipt code is valid before submission
+        {
+            // Additional logic for submission using the receipt code if needed
+            PrintConfirmationMessage();
+        }
 
         Console.ReadLine(); // Keep the console window open
+    }
+}
+
+public class Program
+{
+    static void Main()
+    {
+        VotingSystem votingSystem = new VotingSystem();
+        votingSystem.RunVotingSystem();
     }
 }
